@@ -5,10 +5,10 @@ type StudentTableProps = {
   students: Student[]
   pendingStudentIds: string[]
   onSelectStudent: (student: Student) => void
-  onToggleCome: (student: Student) => void
+  onMarkCome: (student: Student) => void
 }
 
-export function StudentTable({ students, pendingStudentIds, onSelectStudent, onToggleCome }: StudentTableProps) {
+export function StudentTable({ students, pendingStudentIds, onSelectStudent, onMarkCome }: StudentTableProps) {
   return (
     <div className="hidden overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm lg:block">
       <table className="min-w-full divide-y divide-slate-200 text-left">
@@ -33,17 +33,19 @@ export function StudentTable({ students, pendingStudentIds, onSelectStudent, onT
                 <td className="whitespace-nowrap px-5 py-4"><StatusBadge status="paid" active={student.paid} /></td>
                 <td className="whitespace-nowrap px-5 py-4"><StatusBadge status="come" active={student.come} /></td>
                 <td className="whitespace-nowrap px-5 py-4 text-right">
-                  <button
-                    className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60"
-                    type="button"
-                    disabled={isUpdating}
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      onToggleCome(student)
-                    }}
-                  >
-                    {isUpdating ? 'Saving...' : student.come ? 'Undo Came' : 'Mark Came'}
-                  </button>
+                  {!student.come ? (
+                    <button
+                      className="h-9 rounded-md bg-slate-950 px-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-wait disabled:opacity-60"
+                      type="button"
+                      disabled={isUpdating}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onMarkCome(student)
+                      }}
+                    >
+                      {isUpdating ? 'Saving...' : 'Mark Came'}
+                    </button>
+                  ) : <span className="text-sm font-medium text-slate-500">Completed</span>}
                 </td>
               </tr>
             )

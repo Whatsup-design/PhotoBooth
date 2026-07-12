@@ -5,10 +5,10 @@ type StudentCardProps = {
   student: Student
   isUpdating: boolean
   onClick: (student: Student) => void
-  onToggleCome: (student: Student) => void
+  onMarkCome: (student: Student) => void
 }
 
-export function StudentCard({ student, isUpdating, onClick, onToggleCome }: StudentCardProps) {
+export function StudentCard({ student, isUpdating, onClick, onMarkCome }: StudentCardProps) {
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300">
       <button type="button" className="w-full text-left focus:outline-none focus:ring-2 focus:ring-slate-300" onClick={() => onClick(student)}>
@@ -24,16 +24,16 @@ export function StudentCard({ student, isUpdating, onClick, onToggleCome }: Stud
           </div>
         </div>
       </button>
-      <button
-        className={`mt-4 h-11 w-full rounded-lg px-4 text-sm font-semibold transition focus:outline-none focus:ring-2 ${
-          student.come ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus:ring-slate-300' : 'bg-slate-950 text-white hover:bg-slate-800 focus:ring-slate-400'
-        } disabled:cursor-wait disabled:opacity-60`}
-        type="button"
-        disabled={isUpdating}
-        onClick={() => onToggleCome(student)}
-      >
-        {isUpdating ? 'Saving...' : student.come ? 'Undo Came' : 'Mark Came'}
-      </button>
+      {!student.come ? (
+        <button
+          className="mt-4 h-11 w-full rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:cursor-wait disabled:opacity-60"
+          type="button"
+          disabled={isUpdating}
+          onClick={() => onMarkCome(student)}
+        >
+          {isUpdating ? 'Saving...' : 'Mark Came'}
+        </button>
+      ) : null}
     </article>
   )
 }

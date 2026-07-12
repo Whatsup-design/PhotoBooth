@@ -33,6 +33,7 @@ function App() {
   const [studentLoadError, setStudentLoadError] = useState('')
   const [studentUpdateError, setStudentUpdateError] = useState('')
   const [pendingStudentIds, setPendingStudentIds] = useState<string[]>([])
+  const [studentToMarkCame, setStudentToMarkCame] = useState<Student | null>(null)
 
   const loadStudents = async () => {
     setIsLoadingStudents(true)
@@ -61,7 +62,7 @@ function App() {
   const paidStudents = studentRecords.filter((student) => student.paid).length
   const cameStudents = studentRecords.filter((student) => student.come).length
 
-  const toggleStudentCome = async (student: Student) => {
+  const requestMarkStudentCame = (student: Student) => {
     if (pendingStudentIds.includes(student.id)) {
       return
     }
@@ -71,7 +72,22 @@ function App() {
       return
     }
 
-    const nextCome = !student.come
+    if (student.come) {
+      return
+    }
+
+    setStudentUpdateError('')
+    setStudentToMarkCame(student)
+  }
+
+  const markStudentCame = async () => {
+    const student = studentToMarkCame
+
+    if (!student || pendingStudentIds.includes(student.id)) {
+      return
+    }
+
+    const nextCome = true
     setStudentUpdateError('')
     setPendingStudentIds((currentIds) => [...currentIds, student.id])
 
@@ -90,6 +106,7 @@ function App() {
       setStudentUpdateError(error instanceof Error ? error.message : 'Could not update student arrival status')
     } finally {
       setPendingStudentIds((currentIds) => currentIds.filter((id) => id !== student.id))
+      setStudentToMarkCame(null)
     }
   }
 
@@ -186,7 +203,7 @@ function App() {
                 students={filteredStudents}
                 pendingStudentIds={pendingStudentIds}
                 onSelectStudent={setSelectedStudent}
-                onToggleCome={toggleStudentCome}
+                onMarkCome={requestMarkStudentCame}
               />
               <div className="grid gap-3 md:grid-cols-2 lg:hidden">
                 {filteredStudents.map((student) => (
@@ -195,7 +212,7 @@ function App() {
                     student={student}
                     isUpdating={pendingStudentIds.includes(student.id)}
                     onClick={setSelectedStudent}
-                    onToggleCome={toggleStudentCome}
+                    onMarkCome={requestMarkStudentCame}
                   />
                 ))}
               </div>
@@ -210,8 +227,27 @@ function App() {
         student={selectedStudent}
         isUpdating={selectedStudent ? pendingStudentIds.includes(selectedStudent.id) : false}
         onClose={() => setSelectedStudent(null)}
-        onToggleCome={toggleStudentCome}
+        onMarkCome={requestMarkStudentCame}
       />
+
+      {studentToMarkCame ? (
+        <div className="animate-overlay-fade-in fixed inset-0 z-30 grid place-items-center bg-slate-950/25 p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-came-title" onClick={() => setStudentToMarkCame(null)}>
+          <section className="animate-panel-slide-in w-full max-w-sm rounded-lg bg-white p-5 shadow-xl" onClick={(event) => event.stopPropagation()}>
+            <h2 id="confirm-came-title" className="text-lg font-semibold text-slate-950">Mark student as came?</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              {studentToMarkCame.thaiNickname || studentToMarkCame.nickname || studentToMarkCame.id} will be marked as came. This action cannot be undone.
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button className="h-11 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50" type="button" onClick={() => setStudentToMarkCame(null)}>
+                Cancel
+              </button>
+              <button className="h-11 rounded-md bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800" type="button" onClick={markStudentCame}>
+                Yes, mark came
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </main>
   )
 }

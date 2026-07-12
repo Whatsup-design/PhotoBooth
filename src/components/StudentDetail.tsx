@@ -5,10 +5,10 @@ type StudentDetailProps = {
   student: Student | null
   isUpdating: boolean
   onClose: () => void
-  onToggleCome: (student: Student) => void
+  onMarkCome: (student: Student) => void
 }
 
-export function StudentDetail({ student, isUpdating, onClose, onToggleCome }: StudentDetailProps) {
+export function StudentDetail({ student, isUpdating, onClose, onMarkCome }: StudentDetailProps) {
   if (!student) {
     return null
   }
@@ -33,14 +33,16 @@ export function StudentDetail({ student, isUpdating, onClose, onToggleCome }: St
             <button className="shrink-0 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300" type="button" onClick={onClose}>Close</button>
           </div>
           <div className="mt-4 flex gap-2"><StatusBadge status="paid" active={student.paid} /><StatusBadge status="come" active={student.come} /></div>
-          <button
-            className={`mt-4 h-12 w-full rounded-lg px-4 text-base font-semibold transition focus:outline-none focus:ring-2 ${student.come ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus:ring-slate-300' : 'bg-slate-950 text-white hover:bg-slate-800 focus:ring-slate-400'} disabled:cursor-wait disabled:opacity-60`}
-            type="button"
-            disabled={isUpdating}
-            onClick={() => onToggleCome(student)}
-          >
-            {isUpdating ? 'Saving...' : student.come ? 'Undo Came' : 'Mark Came'}
-          </button>
+          {!student.come ? (
+            <button
+              className="mt-4 h-12 w-full rounded-lg bg-slate-950 px-4 text-base font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:cursor-wait disabled:opacity-60"
+              type="button"
+              disabled={isUpdating}
+              onClick={() => onMarkCome(student)}
+            >
+              {isUpdating ? 'Saving...' : 'Mark Came'}
+            </button>
+          ) : null}
         </div>
         <dl className="grid gap-3 overflow-y-auto p-4 sm:p-5">
           {fields.map((field) => (
