@@ -1,5 +1,6 @@
 import { timingSafeEqual } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { setAdminSessionCookie } from '../../server/adminSession.js'
 
 type VerifyRequest = IncomingMessage & {
   body?: unknown
@@ -43,6 +44,7 @@ export default function handler(request: VerifyRequest, response: VerifyResponse
       return response.status(401).json({ success: false, error: 'Invalid password' })
     }
 
+    setAdminSessionCookie(response, configuredPassword)
     return response.status(200).json({ success: true })
   } catch {
     return response.status(400).json({ success: false, error: 'Invalid password' })

@@ -1,7 +1,9 @@
 {
   "extends": "../tsconfig.node.json",
   "compilerOptions": {
-    "tsBuildInfoFile": "../node_modules/.tmp/tsconfig.api.tsbuildinfo"
+    "tsBuildInfoFile": "../node_modules/.tmp/tsconfig.api.tsbuildinfo",
+    "rootDir": "..",
+    "allowImportingTsExtensions": false
   },
-  "include": ["./**/*.ts"]
+  "include": ["./**/*.ts", "../server/**/*.ts"]
 }
