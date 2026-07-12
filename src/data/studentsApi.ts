@@ -1,6 +1,6 @@
 import type { Student } from '../types/student'
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbyuCKlvTuVvsbj_4-Pyo8XJPX_koH0-uo5vE-MF6VG04JNXYZr0rntrLb_XP1y8xz2J/exec'
+const API_URL = import.meta.env.VITE_STUDENTS_API_URL?.trim() || ''
 
 type StudentApiResponse =
   | {
@@ -51,6 +51,10 @@ function getErrorMessage(payload: StudentApiResponse, fallback: string) {
 }
 
 export async function fetchStudentsFromApi(): Promise<Student[]> {
+  if (!API_URL) {
+    throw new Error('Missing VITE_STUDENTS_API_URL environment variable')
+  }
+
   const url = new URL(API_URL)
   url.searchParams.set('action', 'all')
 
@@ -70,6 +74,10 @@ export async function fetchStudentsFromApi(): Promise<Student[]> {
 }
 
 export async function updateCome(id: string, come: boolean) {
+  if (!API_URL) {
+    throw new Error('Missing VITE_STUDENTS_API_URL environment variable')
+  }
+
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
