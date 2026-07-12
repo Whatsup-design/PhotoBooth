@@ -1,6 +1,7 @@
 import type { Student } from '../types/student'
 
 const API_URL = import.meta.env.VITE_STUDENTS_API_URL?.trim() || ''
+const REQUEST_TIMEOUT_MS = 12_000
 
 type StudentApiResponse =
   | {
@@ -50,6 +51,23 @@ function getErrorMessage(payload: StudentApiResponse, fallback: string) {
   return payload.success ? fallback : payload.error || fallback
 }
 
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit) {
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+
+  try {
+    return await fetch(input, { ...init, signal: controller.signal })
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error('Student API request timed out. Please try again.')
+    }
+
+    throw error
+  } finally {
+    window.clearTimeout(timeoutId)
+  }
+}
+
 export async function fetchStudentsFromApi(): Promise<Student[]> {
   if (!API_URL) {
     throw new Error('Missing VITE_STUDENTS_API_URL environment variable')
@@ -58,7 +76,7 @@ export async function fetchStudentsFromApi(): Promise<Student[]> {
   const url = new URL(API_URL)
   url.searchParams.set('action', 'all')
 
-  const response = await fetch(url, { method: 'GET' })
+  const response = await fetchWithTimeout(url, { method: 'GET' })
 
   if (!response.ok) {
     throw new Error(`Student API returned ${response.status}`)
@@ -78,7 +96,7 @@ export async function updateCome(id: string, come: boolean) {
     throw new Error('Missing VITE_STUDENTS_API_URL environment variable')
   }
 
-  const response = await fetch(API_URL, {
+  const response = await fetchWithTimeout(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'text/plain;charset=utf-8',

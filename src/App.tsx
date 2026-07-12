@@ -3,47 +3,12 @@ import { EmptyState } from './components/EmptyState'
 import { FilterBar } from './components/FilterBar'
 import { StudentCard } from './components/StudentCard'
 import { StudentDetail } from './components/StudentDetail'
+import { StudentListSkeleton } from './components/StudentListSkeleton'
 import { StudentTable } from './components/StudentTable'
 import { MobileStatsStrip, SummaryCards } from './components/SummaryCards'
 import { fetchStudentsFromApi, updateCome } from './data/studentsApi'
-import { students } from './data/mockStudents'
 import type { Student } from './types/student'
 import { filterStudents, type StudentStatusFilter } from './utils/filterStudents'
-
-const STUDENT_CACHE_KEY = 'photobooth-all-students-cache-v1'
-
-function isStudent(value: unknown): value is Student {
-  if (!value || typeof value !== 'object') {
-    return false
-  }
-
-  const record = value as Record<string, unknown>
-  return (
-    typeof record.id === 'string' &&
-    typeof record.thaiNickname === 'string' &&
-    typeof record.nickname === 'string' &&
-    typeof record.paid === 'boolean' &&
-    typeof record.come === 'boolean'
-  )
-}
-
-function getCachedStudents() {
-  try {
-    const cachedStudents = window.localStorage.getItem(STUDENT_CACHE_KEY)
-    const parsed = cachedStudents ? (JSON.parse(cachedStudents) as unknown) : null
-    return Array.isArray(parsed) && parsed.every(isStudent) ? parsed : students
-  } catch {
-    return students
-  }
-}
-
-function cacheStudents(nextStudents: Student[]) {
-  try {
-    window.localStorage.setItem(STUDENT_CACHE_KEY, JSON.stringify(nextStudents))
-  } catch {
-    // The cache is optional; live loading still works when storage is unavailable.
-  }
-}
 
 function ReloadIcon({ spinning = false }: { spinning?: boolean }) {
   return (
@@ -60,7 +25,7 @@ function ReloadIcon({ spinning = false }: { spinning?: boolean }) {
 }
 
 function App() {
-  const [studentRecords, setStudentRecords] = useState<Student[]>(getCachedStudents)
+  const [studentRecords, setStudentRecords] = useState<Student[]>([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<StudentStatusFilter>('all')
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
@@ -71,15 +36,13 @@ function App() {
 
   const loadStudents = async () => {
     setIsLoadingStudents(true)
+    setStudentLoadError('')
+    setStudentRecords([])
+    setSelectedStudent(null)
 
     try {
       const apiStudents = await fetchStudentsFromApi()
       setStudentRecords(apiStudents)
-      cacheStudents(apiStudents)
-      setSelectedStudent((student) =>
-        student ? apiStudents.find((apiStudent) => apiStudent.id === student.id) || null : null,
-      )
-      setStudentLoadError('')
     } catch (error) {
       setStudentLoadError(error instanceof Error ? error.message : 'Could not load students')
     } finally {
@@ -116,11 +79,9 @@ function App() {
       await updateCome(student.id, nextCome)
 
       setStudentRecords((currentStudents) => {
-        const nextStudents = currentStudents.map((currentStudent) =>
+        return currentStudents.map((currentStudent) =>
           currentStudent.id === student.id ? { ...currentStudent, come: nextCome } : currentStudent,
         )
-        cacheStudents(nextStudents)
-        return nextStudents
       })
       setSelectedStudent((currentStudent) =>
         currentStudent?.id === student.id ? { ...currentStudent, come: nextCome } : currentStudent,
@@ -198,8 +159,16 @@ function App() {
           </div>
 
           {studentLoadError ? (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
-              Live data unavailable. Showing the last saved list. {studentLoadError}
+            <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center shadow-sm" role="alert">
+              <h3 className="text-lg font-semibold text-red-950">Could not fetch students</h3>
+              <p className="mt-2 text-sm text-red-800">{studentLoadError}</p>
+              <button
+                className="mt-4 h-11 rounded-lg bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                type="button"
+                onClick={loadStudents}
+              >
+                Try again
+              </button>
             </div>
           ) : null}
 
@@ -209,7 +178,9 @@ function App() {
             </div>
           ) : null}
 
-          {filteredStudents.length > 0 ? (
+          {isLoadingStudents ? (
+            <StudentListSkeleton />
+          ) : studentLoadError ? null : filteredStudents.length > 0 ? (
             <>
               <StudentTable
                 students={filteredStudents}
@@ -229,10 +200,6 @@ function App() {
                 ))}
               </div>
             </>
-          ) : isLoadingStudents ? (
-            <div className="rounded-lg border border-slate-200 bg-white p-6 text-center text-sm font-medium text-slate-600 shadow-sm">
-              Loading students...
-            </div>
           ) : (
             <EmptyState />
           )}
