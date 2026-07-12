@@ -3,6 +3,10 @@
     {
       "source": "/admin-config",
       "destination": "/index.html"
+    },
+    {
+      "source": "/staff",
+      "destination": "/index.html"
     }
   ]
 }
