@@ -47,7 +47,19 @@ export function StudentTable({ students, pendingStudentIds, onSelectStudent, onM
                     >
                       {isUpdating ? 'Saving...' : 'Mark Came'}
                     </button>
-                  ) : <span className="text-sm font-medium text-slate-500">Completed</span>}
+                  ) : (
+                    <button
+                      className="h-9 rounded-md border border-red-300 bg-white px-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-wait disabled:opacity-60"
+                      type="button"
+                      disabled={isUpdating}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onMarkCome(student)
+                      }}
+                    >
+                      {isUpdating ? 'Saving...' : 'Mark Not Came'}
+                    </button>
+                  )}
                 </td>
               </tr>
             )

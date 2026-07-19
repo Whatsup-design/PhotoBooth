@@ -43,7 +43,16 @@ export function StudentDetail({ student, isUpdating, onClose, onMarkCome }: Stud
             >
               {isUpdating ? 'Saving...' : 'Mark Came'}
             </button>
-          ) : null}
+          ) : (
+            <button
+              className="mt-4 h-12 w-full rounded-lg border border-red-300 bg-white px-4 text-base font-semibold text-red-700 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-wait disabled:opacity-60"
+              type="button"
+              disabled={isUpdating}
+              onClick={() => onMarkCome(student)}
+            >
+              {isUpdating ? 'Saving...' : 'Mark Not Came'}
+            </button>
+          )}
         </div>
         <dl className="grid gap-3 overflow-y-auto p-4 sm:p-5">
           {fields.map((field) => (

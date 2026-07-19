@@ -34,7 +34,16 @@ export function StudentCard({ student, isUpdating, onClick, onMarkCome }: Studen
         >
           {isUpdating ? 'Saving...' : 'Mark Came'}
         </button>
-      ) : null}
+      ) : (
+        <button
+          className="mt-4 h-11 w-full rounded-lg border border-red-300 bg-white px-4 text-sm font-semibold text-red-700 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-wait disabled:opacity-60"
+          type="button"
+          disabled={isUpdating}
+          onClick={() => onMarkCome(student)}
+        >
+          {isUpdating ? 'Saving...' : 'Mark Not Came'}
+        </button>
+      )}
     </article>
   )
 }

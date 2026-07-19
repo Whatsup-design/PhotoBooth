@@ -70,12 +70,13 @@ function App() {
       return
     }
 
-    if (!student.paid) {
-      setStudentUpdateError(`${student.thaiNickname || student.nickname || student.id} has not paid yet and cannot be marked as came.`)
+    if (student.come) {
+      markStudentNotCame(student)
       return
     }
 
-    if (student.come) {
+    if (!student.paid) {
+      setStudentUpdateError(`${student.thaiNickname || student.nickname || student.id} has not paid yet and cannot be marked as came.`)
       return
     }
 
@@ -96,7 +97,7 @@ function App() {
     setPendingStudentIds((currentIds) => [...currentIds, student.id])
 
     try {
-      await updateCome(student.id, selectedFormat)
+      await updateCome(student.id, nextCome, selectedFormat)
 
       setStudentRecords((currentStudents) => {
         return currentStudents.map((currentStudent) =>
@@ -112,6 +113,28 @@ function App() {
         setPendingStudentIds((currentIds) => currentIds.filter((id) => id !== student.id))
         setSelectedFormat(null)
         setStudentToMarkCame(null)
+    }
+  }
+
+  const markStudentNotCame = async (student: Student) => {
+    setStudentUpdateError('')
+    setPendingStudentIds((currentIds) => [...currentIds, student.id])
+
+    try {
+      await updateCome(student.id, false)
+
+      setStudentRecords((currentStudents) => {
+        return currentStudents.map((currentStudent) =>
+          currentStudent.id === student.id ? { ...currentStudent, come: false, format: undefined } : currentStudent,
+        )
+      })
+      setSelectedStudent((currentStudent) =>
+        currentStudent?.id === student.id ? { ...currentStudent, come: false, format: undefined } : currentStudent,
+      )
+    } catch (error) {
+      setStudentUpdateError(error instanceof Error ? error.message : 'Could not update student arrival status')
+    } finally {
+      setPendingStudentIds((currentIds) => currentIds.filter((id) => id !== student.id))
     }
   }
 

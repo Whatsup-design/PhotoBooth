@@ -97,12 +97,14 @@ export async function fetchStudentsFromApi(): Promise<Student[]> {
   return payload.data.map(normalizeStudent).filter((student) => student.id !== '')
 }
 
-export async function updateCome(id: string, format: number) {
+export async function updateCome(id: string, come: boolean, format?: number) {
   if (!API_URL) {
     throw new Error('Missing VITE_STUDENTS_API_URL environment variable')
   }
 
-  if (!Number.isInteger(format) || format < 1 || format > 11) {
+  const hasValidFormat = Number.isInteger(format) && (format ?? 0) >= 1 && (format ?? 0) <= 11
+
+  if (come && !hasValidFormat) {
     throw new Error('Select a valid frame format')
   }
 
@@ -114,8 +116,8 @@ export async function updateCome(id: string, format: number) {
     body: JSON.stringify({
       action: 'updateCome',
       id: String(id),
-      come: true,
-      format,
+      come,
+      ...(come ? { format: format as number } : {}),
     }),
   })
 
