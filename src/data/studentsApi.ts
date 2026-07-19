@@ -102,7 +102,10 @@ export async function updateCome(id: string, come: boolean, format?: number) {
     throw new Error('Missing VITE_STUDENTS_API_URL environment variable')
   }
 
-  const hasValidFormat = Number.isInteger(format) && (format ?? 0) >= 1 && (format ?? 0) <= 11
+  const hasValidFormat = typeof format === 'number'
+    && Number.isInteger(format)
+    && format >= 1
+    && format <= 11
 
   if (come && !hasValidFormat) {
     throw new Error('Select a valid frame format')
@@ -117,7 +120,7 @@ export async function updateCome(id: string, come: boolean, format?: number) {
       action: 'updateCome',
       id: String(id),
       come,
-      ...(come ? { format: format as number } : {}),
+      ...(come && hasValidFormat ? { format } : {}),
     }),
   })
 
