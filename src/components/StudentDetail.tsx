@@ -17,6 +17,7 @@ export function StudentDetail({ student, isUpdating, onClose, onMarkCome }: Stud
     { label: 'ID', value: student.id },
     { label: 'Thai nickname', value: student.thaiNickname || '-' },
     { label: 'Nickname', value: student.nickname || '-' },
+    { label: 'Format', value: student.format ?? '-' },
   ]
 
   return (

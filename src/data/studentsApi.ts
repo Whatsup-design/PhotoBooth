@@ -23,6 +23,11 @@ function toBoolean(value: unknown) {
   return typeof value === 'string' && value.trim().toLowerCase() === 'true'
 }
 
+function toFormat(value: unknown) {
+  const format = Number(value)
+  return Number.isInteger(format) && format >= 1 && format <= 11 ? format : undefined
+}
+
 function normalizeStudent(row: unknown): Student {
   const record = row && typeof row === 'object' ? (row as Record<string, unknown>) : {}
   const rowNumber = Number(record.rowNumber)
@@ -34,6 +39,7 @@ function normalizeStudent(row: unknown): Student {
     nickname: String(record.nickname ?? '').trim(),
     paid: toBoolean(record.paid),
     come: toBoolean(record.come),
+    format: toFormat(record.format),
   }
 }
 
@@ -91,9 +97,13 @@ export async function fetchStudentsFromApi(): Promise<Student[]> {
   return payload.data.map(normalizeStudent).filter((student) => student.id !== '')
 }
 
-export async function updateCome(id: string, come: boolean) {
+export async function updateCome(id: string, format: number) {
   if (!API_URL) {
     throw new Error('Missing VITE_STUDENTS_API_URL environment variable')
+  }
+
+  if (!Number.isInteger(format) || format < 1 || format > 11) {
+    throw new Error('Select a valid frame format')
   }
 
   const response = await fetchWithTimeout(API_URL, {
@@ -104,7 +114,8 @@ export async function updateCome(id: string, come: boolean) {
     body: JSON.stringify({
       action: 'updateCome',
       id: String(id),
-      come,
+      come: true,
+      format,
     }),
   })
 

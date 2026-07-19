@@ -10,6 +10,8 @@ import { fetchStudentsFromApi, updateCome } from './data/studentsApi'
 import type { Student } from './types/student'
 import { filterStudents, type StudentStatusFilter } from './utils/filterStudents'
 
+const FRAME_OPTIONS = Array.from({ length: 11 }, (_, index) => index + 1)
+
 function ReloadIcon({ spinning = false }: { spinning?: boolean }) {
   return (
     <svg className={`h-4 w-4 ${spinning ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -34,6 +36,7 @@ function App() {
   const [studentUpdateError, setStudentUpdateError] = useState('')
   const [pendingStudentIds, setPendingStudentIds] = useState<string[]>([])
   const [studentToMarkCame, setStudentToMarkCame] = useState<Student | null>(null)
+  const [selectedFormat, setSelectedFormat] = useState<number | null>(null)
 
   const loadStudents = async () => {
     setIsLoadingStudents(true)
@@ -77,13 +80,14 @@ function App() {
     }
 
     setStudentUpdateError('')
+    setSelectedFormat(null)
     setStudentToMarkCame(student)
   }
 
   const markStudentCame = async () => {
     const student = studentToMarkCame
 
-    if (!student || pendingStudentIds.includes(student.id)) {
+    if (!student || !selectedFormat || pendingStudentIds.includes(student.id)) {
       return
     }
 
@@ -92,21 +96,22 @@ function App() {
     setPendingStudentIds((currentIds) => [...currentIds, student.id])
 
     try {
-      await updateCome(student.id, nextCome)
+      await updateCome(student.id, selectedFormat)
 
       setStudentRecords((currentStudents) => {
         return currentStudents.map((currentStudent) =>
-          currentStudent.id === student.id ? { ...currentStudent, come: nextCome } : currentStudent,
+          currentStudent.id === student.id ? { ...currentStudent, come: nextCome, format: selectedFormat } : currentStudent,
         )
       })
       setSelectedStudent((currentStudent) =>
-        currentStudent?.id === student.id ? { ...currentStudent, come: nextCome } : currentStudent,
+        currentStudent?.id === student.id ? { ...currentStudent, come: nextCome, format: selectedFormat } : currentStudent,
       )
     } catch (error) {
       setStudentUpdateError(error instanceof Error ? error.message : 'Could not update student arrival status')
-    } finally {
-      setPendingStudentIds((currentIds) => currentIds.filter((id) => id !== student.id))
-      setStudentToMarkCame(null)
+      } finally {
+        setPendingStudentIds((currentIds) => currentIds.filter((id) => id !== student.id))
+        setSelectedFormat(null)
+        setStudentToMarkCame(null)
     }
   }
 
@@ -231,18 +236,38 @@ function App() {
       />
 
       {studentToMarkCame ? (
-        <div className="animate-overlay-fade-in fixed inset-0 z-30 grid place-items-center bg-slate-950/25 p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-came-title" onClick={() => setStudentToMarkCame(null)}>
-          <section className="animate-panel-slide-in w-full max-w-sm rounded-lg bg-white p-5 shadow-xl" onClick={(event) => event.stopPropagation()}>
-            <h2 id="confirm-came-title" className="text-lg font-semibold text-slate-950">Mark student as came?</h2>
+        <div className="animate-overlay-fade-in fixed inset-0 z-30 grid place-items-center bg-slate-950/25 p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-came-title" onClick={() => !pendingStudentIds.includes(studentToMarkCame.id) && setStudentToMarkCame(null)}>
+          <section className="animate-panel-slide-in flex max-h-[90svh] w-full max-w-3xl flex-col rounded-lg bg-white p-5 shadow-xl" onClick={(event) => event.stopPropagation()}>
+            <h2 id="confirm-came-title" className="text-lg font-semibold text-slate-950">Choose a photo frame</h2>
             <p className="mt-2 text-sm text-slate-600">
-              {studentToMarkCame.thaiNickname || studentToMarkCame.nickname || studentToMarkCame.id} will be marked as came. This action cannot be undone.
+              Select one format for {studentToMarkCame.thaiNickname || studentToMarkCame.nickname || studentToMarkCame.id}. Marking came cannot be undone.
             </p>
+            <div className="mt-4 grid grid-cols-3 gap-2 overflow-y-auto pr-1 sm:grid-cols-4 lg:grid-cols-6">
+              {FRAME_OPTIONS.map((format) => {
+                const isSelected = selectedFormat === format
+                return (
+                  <button
+                    key={format}
+                    className={`overflow-hidden rounded-md border text-left transition focus:outline-none focus:ring-2 focus:ring-slate-400 ${
+                      isSelected ? 'border-slate-950 ring-2 ring-slate-950' : 'border-slate-200 hover:border-slate-400'
+                    }`}
+                    type="button"
+                    aria-pressed={isSelected}
+                    disabled={pendingStudentIds.includes(studentToMarkCame.id)}
+                    onClick={() => setSelectedFormat(format)}
+                  >
+                    <img className="h-20 w-full bg-slate-100 object-contain sm:h-24" src={`/frame/Frame${format}.png`} alt={`Format ${format}`} />
+                    <span className="block border-t border-slate-100 px-2 py-1.5 text-center text-xs font-semibold text-slate-700">Format {format}</span>
+                  </button>
+                )
+              })}
+            </div>
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <button className="h-11 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50" type="button" onClick={() => setStudentToMarkCame(null)}>
+              <button className="h-11 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60" type="button" disabled={pendingStudentIds.includes(studentToMarkCame.id)} onClick={() => setStudentToMarkCame(null)}>
                 Cancel
               </button>
-              <button className="h-11 rounded-md bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800" type="button" onClick={markStudentCame}>
-                Yes, mark came
+              <button className="h-11 rounded-md bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400" type="button" disabled={!selectedFormat || pendingStudentIds.includes(studentToMarkCame.id)} onClick={markStudentCame}>
+                {pendingStudentIds.includes(studentToMarkCame.id) ? 'Saving...' : 'Confirm came'}
               </button>
             </div>
           </section>

@@ -17,6 +17,7 @@ export function StudentCard({ student, isUpdating, onClick, onMarkCome }: Studen
             <p className="text-xs font-bold uppercase text-slate-500">ID {student.id}</p>
             <h3 className="mt-1 truncate text-lg font-semibold text-slate-950">{student.thaiNickname || '-'}</h3>
             <p className="mt-0.5 truncate text-sm text-slate-600">{student.nickname || '-'}</p>
+            <p className="mt-2 text-xs font-medium text-slate-500">Format {student.format ?? '-'}</p>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1.5">
             <StatusBadge status="paid" active={student.paid} />

@@ -31,7 +31,7 @@ export function AdminConfig() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
-
+  
   const loadCurrentPassword = async () => {
     setError('')
     setSuccessMessage('')

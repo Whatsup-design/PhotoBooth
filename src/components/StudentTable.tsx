@@ -19,6 +19,7 @@ export function StudentTable({ students, pendingStudentIds, onSelectStudent, onM
             <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-500">Nickname</th>
             <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-500">Paid</th>
             <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-500">Come</th>
+            <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-500">Format</th>
             <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-slate-500">Action</th>
           </tr>
         </thead>
@@ -32,6 +33,7 @@ export function StudentTable({ students, pendingStudentIds, onSelectStudent, onM
                 <td className="px-5 py-4 text-sm text-slate-700">{student.nickname || '-'}</td>
                 <td className="whitespace-nowrap px-5 py-4"><StatusBadge status="paid" active={student.paid} /></td>
                 <td className="whitespace-nowrap px-5 py-4"><StatusBadge status="come" active={student.come} /></td>
+                <td className="whitespace-nowrap px-5 py-4 text-sm font-medium text-slate-700">{student.format ?? '-'}</td>
                 <td className="whitespace-nowrap px-5 py-4 text-right">
                   {!student.come ? (
                     <button

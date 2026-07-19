@@ -5,4 +5,5 @@ export type Student = {
   nickname: string
   paid: boolean
   come: boolean
+  format?: number
 }
