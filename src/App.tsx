@@ -36,6 +36,7 @@ function App() {
   const [studentUpdateError, setStudentUpdateError] = useState('')
   const [pendingStudentIds, setPendingStudentIds] = useState<string[]>([])
   const [studentToMarkCame, setStudentToMarkCame] = useState<Student | null>(null)
+  const [studentToMarkNotCame, setStudentToMarkNotCame] = useState<Student | null>(null)
   const [selectedFormat, setSelectedFormat] = useState<number | null>(null)
 
   const loadStudents = async () => {
@@ -71,7 +72,8 @@ function App() {
     }
 
     if (student.come) {
-      markStudentNotCame(student)
+      setStudentUpdateError('')
+      setStudentToMarkNotCame(student)
       return
     }
 
@@ -135,6 +137,7 @@ function App() {
       setStudentUpdateError(error instanceof Error ? error.message : 'Could not update student arrival status')
     } finally {
       setPendingStudentIds((currentIds) => currentIds.filter((id) => id !== student.id))
+      setStudentToMarkNotCame(null)
     }
   }
 
@@ -291,6 +294,25 @@ function App() {
               </button>
               <button className="h-11 rounded-md bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400" type="button" disabled={!selectedFormat || pendingStudentIds.includes(studentToMarkCame.id)} onClick={markStudentCame}>
                 {pendingStudentIds.includes(studentToMarkCame.id) ? 'Saving...' : 'Confirm came'}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {studentToMarkNotCame ? (
+        <div className="animate-overlay-fade-in fixed inset-0 z-30 grid place-items-center bg-slate-950/25 p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-not-came-title" onClick={() => !pendingStudentIds.includes(studentToMarkNotCame.id) && setStudentToMarkNotCame(null)}>
+          <section className="animate-panel-slide-in w-full max-w-sm rounded-lg bg-white p-5 shadow-xl" onClick={(event) => event.stopPropagation()}>
+            <h2 id="confirm-not-came-title" className="text-lg font-semibold text-slate-950">Mark student as not came?</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              {studentToMarkNotCame.thaiNickname || studentToMarkNotCame.nickname || studentToMarkNotCame.id} will be marked as not came and the selected frame will be cleared.
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button className="h-11 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60" type="button" disabled={pendingStudentIds.includes(studentToMarkNotCame.id)} onClick={() => setStudentToMarkNotCame(null)}>
+                Keep Came
+              </button>
+              <button className="h-11 rounded-md border border-red-300 bg-white px-4 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-wait disabled:opacity-60" type="button" disabled={pendingStudentIds.includes(studentToMarkNotCame.id)} onClick={() => markStudentNotCame(studentToMarkNotCame)}>
+                {pendingStudentIds.includes(studentToMarkNotCame.id) ? 'Saving...' : 'Mark Not Came'}
               </button>
             </div>
           </section>
