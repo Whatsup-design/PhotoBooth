@@ -1,10 +1,15 @@
-import type { StudentStatusFilter } from '../utils/filterStudents'
+import { useState } from 'react'
+import type { StudentStatusFilter, StudentTimeSort } from '../utils/filterStudents'
 
 type FilterBarProps = {
   search: string
   statusFilter: StudentStatusFilter
+  dateFilter: string
+  timeSort: StudentTimeSort
   onSearchChange: (search: string) => void
   onStatusChange: (filter: StudentStatusFilter) => void
+  onDateFilterChange: (date: string) => void
+  onTimeSortChange: (sort: StudentTimeSort) => void
   onReset: () => void
 }
 
@@ -16,8 +21,9 @@ const filterOptions: Array<{ value: StudentStatusFilter; label: string }> = [
   { value: 'not-came', label: 'Not Came' },
 ]
 
-export function FilterBar({ search, statusFilter, onSearchChange, onStatusChange, onReset }: FilterBarProps) {
-  const hasActiveFilters = search !== '' || statusFilter !== 'all'
+export function FilterBar({ search, statusFilter, dateFilter, timeSort, onSearchChange, onStatusChange, onDateFilterChange, onTimeSortChange, onReset }: FilterBarProps) {
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
+  const hasActiveFilters = search !== '' || statusFilter !== 'all' || dateFilter !== '' || timeSort !== 'none'
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4" aria-label="Student filters">
@@ -42,6 +48,9 @@ export function FilterBar({ search, statusFilter, onSearchChange, onStatusChange
             Clear
           </button>
         ) : null}
+        <button className="h-12 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300" type="button" aria-expanded={isAdvancedOpen} onClick={() => setIsAdvancedOpen((isOpen) => !isOpen)}>
+          Filters
+        </button>
       </div>
 
       <div className="mt-3 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Student status filters">
@@ -62,6 +71,23 @@ export function FilterBar({ search, statusFilter, onSearchChange, onStatusChange
           )
         })}
       </div>
+
+      {isAdvancedOpen ? (
+        <div className="mt-3 grid gap-3 border-t border-slate-100 pt-3 sm:grid-cols-2">
+          <label className="grid gap-1.5 text-sm font-semibold text-slate-700">
+            Came date
+            <input className="h-11 rounded-md border border-slate-300 bg-white px-3 text-base font-normal text-slate-950 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200" type="date" value={dateFilter} onChange={(event) => onDateFilterChange(event.target.value)} />
+          </label>
+          <label className="grid gap-1.5 text-sm font-semibold text-slate-700">
+            Time order
+            <select className="h-11 rounded-md border border-slate-300 bg-white px-3 text-base font-normal text-slate-950 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200" value={timeSort} onChange={(event) => onTimeSortChange(event.target.value as StudentTimeSort)}>
+              <option value="none">None</option>
+              <option value="oldest">Oldest first</option>
+              <option value="newest">Newest first</option>
+            </select>
+          </label>
+        </div>
+      ) : null}
     </section>
   )
 }

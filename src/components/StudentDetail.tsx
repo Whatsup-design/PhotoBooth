@@ -19,6 +19,7 @@ export function StudentDetail({ student, isUpdating, onClose, onMarkCome, onMark
     { label: 'Thai nickname', value: student.thaiNickname || '-' },
     { label: 'Nickname', value: student.nickname || '-' },
     { label: 'Format', value: student.format ?? '-' },
+    { label: 'Came at', value: student.updatedAt ? new Date(student.updatedAt).toLocaleString() : '-' },
   ]
 
   return (

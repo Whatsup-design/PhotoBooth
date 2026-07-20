@@ -36,6 +36,15 @@ function toFormat(value: unknown) {
   return Number.isInteger(format) && format >= 1 && format <= 12 ? format : undefined
 }
 
+function toTimestamp(value: unknown) {
+  if (typeof value !== 'string' || !value.trim()) {
+    return undefined
+  }
+
+  const timestamp = new Date(value)
+  return Number.isNaN(timestamp.getTime()) ? undefined : timestamp.toISOString()
+}
+
 function normalizeStudent(row: unknown): Student {
   const record = row && typeof row === 'object' ? (row as Record<string, unknown>) : {}
   const rowNumber = Number(record.rowNumber)
@@ -48,6 +57,7 @@ function normalizeStudent(row: unknown): Student {
     paid: toBoolean(record.paid),
     come: toBoolean(record.come),
     format: toFormat(record.format),
+    updatedAt: toTimestamp(record.updatedAt),
   }
 }
 

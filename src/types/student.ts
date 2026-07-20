@@ -6,4 +6,5 @@ export type Student = {
   paid: boolean
   come: boolean
   format?: number
+  updatedAt?: string
 }

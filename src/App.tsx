@@ -9,7 +9,7 @@ import { StudentTable } from './components/StudentTable'
 import { MobileStatsStrip, SummaryCards } from './components/SummaryCards'
 import { createEmergencyStudent, fetchStudentsFromApi, type EmergencyStudentInput, updateCome, updatePaid } from './data/studentsApi'
 import type { Student } from './types/student'
-import { filterStudents, type StudentStatusFilter } from './utils/filterStudents'
+import { filterStudents, type StudentStatusFilter, type StudentTimeSort } from './utils/filterStudents'
 
 const FRAME_OPTIONS = Array.from({ length: 12 }, (_, index) => index + 1)
 
@@ -31,6 +31,8 @@ function App() {
   const [studentRecords, setStudentRecords] = useState<Student[]>([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<StudentStatusFilter>('all')
+  const [dateFilter, setDateFilter] = useState('')
+  const [timeSort, setTimeSort] = useState<StudentTimeSort>('none')
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [isLoadingStudents, setIsLoadingStudents] = useState(true)
   const [studentLoadError, setStudentLoadError] = useState('')
@@ -64,8 +66,8 @@ function App() {
   }, [])
 
   const filteredStudents = useMemo(
-    () => filterStudents(studentRecords, statusFilter, search),
-    [search, statusFilter, studentRecords],
+    () => filterStudents(studentRecords, statusFilter, search, dateFilter, timeSort),
+    [dateFilter, search, statusFilter, studentRecords, timeSort],
   )
   const paidStudents = studentRecords.filter((student) => student.paid).length
   const cameStudents = studentRecords.filter((student) => student.come).length
@@ -103,15 +105,18 @@ function App() {
     setPendingStudentIds((currentIds) => [...currentIds, student.id])
 
     try {
-      await updateCome(student.id, nextCome, selectedFormat)
+      const updateResult = await updateCome(student.id, nextCome, selectedFormat)
+      const updatedAt = updateResult && typeof updateResult === 'object' && typeof (updateResult as Record<string, unknown>).updatedAt === 'string'
+        ? (updateResult as Record<string, string>).updatedAt
+        : new Date().toISOString()
 
       setStudentRecords((currentStudents) => {
         return currentStudents.map((currentStudent) =>
-          currentStudent.id === student.id ? { ...currentStudent, come: nextCome, format: selectedFormat } : currentStudent,
+          currentStudent.id === student.id ? { ...currentStudent, come: nextCome, format: selectedFormat, updatedAt } : currentStudent,
         )
       })
       setSelectedStudent((currentStudent) =>
-        currentStudent?.id === student.id ? { ...currentStudent, come: nextCome, format: selectedFormat } : currentStudent,
+        currentStudent?.id === student.id ? { ...currentStudent, come: nextCome, format: selectedFormat, updatedAt } : currentStudent,
       )
     } catch (error) {
       setStudentUpdateError(error instanceof Error ? error.message : 'Could not update student arrival status')
@@ -131,11 +136,11 @@ function App() {
 
       setStudentRecords((currentStudents) => {
         return currentStudents.map((currentStudent) =>
-          currentStudent.id === student.id ? { ...currentStudent, come: false, format: undefined } : currentStudent,
+          currentStudent.id === student.id ? { ...currentStudent, come: false, format: undefined, updatedAt: undefined } : currentStudent,
         )
       })
       setSelectedStudent((currentStudent) =>
-        currentStudent?.id === student.id ? { ...currentStudent, come: false, format: undefined } : currentStudent,
+        currentStudent?.id === student.id ? { ...currentStudent, come: false, format: undefined, updatedAt: undefined } : currentStudent,
       )
     } catch (error) {
       setStudentUpdateError(error instanceof Error ? error.message : 'Could not update student arrival status')
@@ -251,11 +256,17 @@ function App() {
           <FilterBar
             search={search}
             statusFilter={statusFilter}
+            dateFilter={dateFilter}
+            timeSort={timeSort}
             onSearchChange={setSearch}
             onStatusChange={setStatusFilter}
+            onDateFilterChange={setDateFilter}
+            onTimeSortChange={setTimeSort}
             onReset={() => {
               setSearch('')
               setStatusFilter('all')
+              setDateFilter('')
+              setTimeSort('none')
             }}
           />
         </div>
