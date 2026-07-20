@@ -1,5 +1,13 @@
 import type { Student } from '../types/student'
 
+export type EmergencyStudentInput = {
+  id: string
+  thaiNickname: string
+  nickname: string
+  come: boolean
+  format?: number
+}
+
 const API_URL = import.meta.env.VITE_STUDENTS_API_URL?.trim() || ''
 const REQUEST_TIMEOUT_MS = 12_000
 
@@ -8,7 +16,7 @@ type StudentApiResponse =
       success: true
       action?: string
       count?: number
-      data: unknown[]
+      data?: unknown
     }
   | {
       success: false
@@ -94,6 +102,10 @@ export async function fetchStudentsFromApi(): Promise<Student[]> {
     throw new Error(getErrorMessage(payload, 'Student API returned an error'))
   }
 
+  if (!Array.isArray(payload.data)) {
+    throw new Error('Student API returned invalid student data')
+  }
+
   return payload.data.map(normalizeStudent).filter((student) => student.id !== '')
 }
 
@@ -135,4 +147,61 @@ export async function updateCome(id: string, come: boolean, format?: number) {
   }
 
   return payload.data
+}
+
+export async function createEmergencyStudent(input: EmergencyStudentInput): Promise<Student> {
+  if (!API_URL) {
+    throw new Error('Missing VITE_STUDENTS_API_URL environment variable')
+  }
+
+  const id = input.id.trim()
+  const thaiNickname = input.thaiNickname.trim()
+  const nickname = input.nickname.trim()
+  const format = input.format
+  const hasValidFormat = typeof format === 'number'
+    && Number.isInteger(format)
+    && format >= 1
+    && format <= 11
+
+  if (!id) {
+    throw new Error('Enter a student ID')
+  }
+
+  if (input.come && !hasValidFormat) {
+    throw new Error('Select a valid frame format')
+  }
+
+  const response = await fetchWithTimeout(API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8',
+    },
+    body: JSON.stringify({
+      action: 'createStudent',
+      id,
+      thaiNickname,
+      nickname,
+      paid: true,
+      come: input.come,
+      ...(input.come && hasValidFormat ? { format } : {}),
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Student creation API returned ${response.status}`)
+  }
+
+  const payload = await readApiResponse(response)
+
+  if (!payload.success) {
+    throw new Error(getErrorMessage(payload, 'Could not add emergency student'))
+  }
+
+  const student = normalizeStudent(payload.data)
+
+  if (!student.id) {
+    throw new Error('Student API returned invalid student data')
+  }
+
+  return student
 }

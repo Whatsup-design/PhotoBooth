@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { EmptyState } from './components/EmptyState'
+import { EmergencyStudentDialog } from './components/EmergencyStudentDialog'
 import { FilterBar } from './components/FilterBar'
 import { StudentCard } from './components/StudentCard'
 import { StudentDetail } from './components/StudentDetail'
 import { StudentListSkeleton } from './components/StudentListSkeleton'
 import { StudentTable } from './components/StudentTable'
 import { MobileStatsStrip, SummaryCards } from './components/SummaryCards'
-import { fetchStudentsFromApi, updateCome } from './data/studentsApi'
+import { createEmergencyStudent, fetchStudentsFromApi, type EmergencyStudentInput, updateCome } from './data/studentsApi'
 import type { Student } from './types/student'
 import { filterStudents, type StudentStatusFilter } from './utils/filterStudents'
 
@@ -38,6 +39,8 @@ function App() {
   const [studentToMarkCame, setStudentToMarkCame] = useState<Student | null>(null)
   const [studentToMarkNotCame, setStudentToMarkNotCame] = useState<Student | null>(null)
   const [selectedFormat, setSelectedFormat] = useState<number | null>(null)
+  const [isEmergencyDialogOpen, setIsEmergencyDialogOpen] = useState(false)
+  const [isCreatingEmergencyStudent, setIsCreatingEmergencyStudent] = useState(false)
 
   const loadStudents = async () => {
     setIsLoadingStudents(true)
@@ -141,6 +144,18 @@ function App() {
     }
   }
 
+  const addEmergencyStudent = async (input: EmergencyStudentInput) => {
+    setIsCreatingEmergencyStudent(true)
+
+    try {
+      const createdStudent = await createEmergencyStudent(input)
+      setStudentRecords((currentStudents) => [...currentStudents, createdStudent])
+      setIsEmergencyDialogOpen(false)
+    } finally {
+      setIsCreatingEmergencyStudent(false)
+    }
+  }
+
   return (
     <main className="min-h-screen bg-slate-100 text-slate-950">
       <div className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-sm sm:hidden">
@@ -160,6 +175,9 @@ function App() {
           >
             <ReloadIcon spinning={isLoadingStudents} />
           </button>
+          <button className="h-11 shrink-0 rounded-md bg-slate-950 px-3 text-sm font-semibold text-white transition hover:bg-slate-800" type="button" onClick={() => setIsEmergencyDialogOpen(true)}>
+            Add
+          </button>
         </div>
       </div>
 
@@ -170,15 +188,20 @@ function App() {
               <h1 className="text-3xl font-semibold text-slate-950">Student Queue</h1>
               <p className="mt-2 text-base text-slate-600">Search payment and arrival status from Google Sheets</p>
             </div>
-            <button
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-wait disabled:bg-slate-100 disabled:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300"
-              type="button"
-              disabled={isLoadingStudents}
-              onClick={loadStudents}
-            >
-              <ReloadIcon spinning={isLoadingStudents} />
-              {isLoadingStudents ? 'Loading' : 'Reload'}
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-wait disabled:bg-slate-100 disabled:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300"
+                type="button"
+                disabled={isLoadingStudents}
+                onClick={loadStudents}
+              >
+                <ReloadIcon spinning={isLoadingStudents} />
+                {isLoadingStudents ? 'Loading' : 'Reload'}
+              </button>
+              <button className="inline-flex h-11 items-center justify-center rounded-md bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400" type="button" onClick={() => setIsEmergencyDialogOpen(true)}>
+                Emergency add
+              </button>
+            </div>
           </div>
         </header>
 
@@ -318,6 +341,13 @@ function App() {
           </section>
         </div>
       ) : null}
+
+      <EmergencyStudentDialog
+        isOpen={isEmergencyDialogOpen}
+        isSaving={isCreatingEmergencyStudent}
+        onClose={() => setIsEmergencyDialogOpen(false)}
+        onCreate={addEmergencyStudent}
+      />
     </main>
   )
 }
