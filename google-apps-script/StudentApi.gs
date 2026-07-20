@@ -61,8 +61,12 @@ function doPost(e) {
       const id = String(body.id || '').trim()
       if (!id) throw new Error('Missing id')
 
+      if (!normalizeBoolean(body.paid)) {
+        throw new Error('Paid must be true')
+      }
+
       const result = withSheetLock(() =>
-        updateFieldById(id, HEADERS.PAID, normalizeBoolean(body.paid))
+        updateFieldById(id, HEADERS.PAID, true)
       )
 
       return jsonResponse({ success: true, message: 'Paid updated successfully', data: result })

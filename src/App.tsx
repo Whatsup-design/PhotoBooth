@@ -38,6 +38,7 @@ function App() {
   const [pendingStudentIds, setPendingStudentIds] = useState<string[]>([])
   const [studentToMarkCame, setStudentToMarkCame] = useState<Student | null>(null)
   const [studentToMarkNotCame, setStudentToMarkNotCame] = useState<Student | null>(null)
+  const [studentToMarkPaid, setStudentToMarkPaid] = useState<Student | null>(null)
   const [selectedFormat, setSelectedFormat] = useState<number | null>(null)
   const [isEmergencyDialogOpen, setIsEmergencyDialogOpen] = useState(false)
   const [isCreatingEmergencyStudent, setIsCreatingEmergencyStudent] = useState(false)
@@ -144,8 +145,19 @@ function App() {
     }
   }
 
-  const markStudentPaid = async (student: Student) => {
+  const requestMarkStudentPaid = (student: Student) => {
     if (pendingStudentIds.includes(student.id) || student.paid) {
+      return
+    }
+
+    setStudentUpdateError('')
+    setStudentToMarkPaid(student)
+  }
+
+  const markStudentPaid = async () => {
+    const student = studentToMarkPaid
+
+    if (!student || pendingStudentIds.includes(student.id) || student.paid) {
       return
     }
 
@@ -167,6 +179,7 @@ function App() {
       setStudentUpdateError(error instanceof Error ? error.message : 'Could not update student payment status')
     } finally {
       setPendingStudentIds((currentIds) => currentIds.filter((id) => id !== student.id))
+      setStudentToMarkPaid(null)
     }
   }
 
@@ -308,7 +321,7 @@ function App() {
         isUpdating={selectedStudent ? pendingStudentIds.includes(selectedStudent.id) : false}
         onClose={() => setSelectedStudent(null)}
         onMarkCome={requestMarkStudentCame}
-        onMarkPaid={markStudentPaid}
+        onMarkPaid={requestMarkStudentPaid}
       />
 
       {studentToMarkCame ? (
@@ -363,6 +376,25 @@ function App() {
               </button>
               <button className="h-11 rounded-md border border-red-300 bg-white px-4 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-wait disabled:opacity-60" type="button" disabled={pendingStudentIds.includes(studentToMarkNotCame.id)} onClick={() => markStudentNotCame(studentToMarkNotCame)}>
                 {pendingStudentIds.includes(studentToMarkNotCame.id) ? 'Saving...' : 'Mark Not Came'}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {studentToMarkPaid ? (
+        <div className="animate-overlay-fade-in fixed inset-0 z-30 grid place-items-center bg-slate-950/25 p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-paid-title" onClick={() => !pendingStudentIds.includes(studentToMarkPaid.id) && setStudentToMarkPaid(null)}>
+          <section className="animate-panel-slide-in w-full max-w-sm rounded-lg bg-white p-5 shadow-xl" onClick={(event) => event.stopPropagation()}>
+            <h2 id="confirm-paid-title" className="text-lg font-semibold text-slate-950">Mark student as paid?</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              {studentToMarkPaid.thaiNickname || studentToMarkPaid.nickname || studentToMarkPaid.id} will be marked as paid.
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button className="h-11 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60" type="button" disabled={pendingStudentIds.includes(studentToMarkPaid.id)} onClick={() => setStudentToMarkPaid(null)}>
+                Cancel
+              </button>
+              <button className="h-11 rounded-md bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-wait disabled:bg-emerald-300" type="button" disabled={pendingStudentIds.includes(studentToMarkPaid.id)} onClick={markStudentPaid}>
+                {pendingStudentIds.includes(studentToMarkPaid.id) ? 'Saving...' : 'Mark Paid'}
               </button>
             </div>
           </section>
