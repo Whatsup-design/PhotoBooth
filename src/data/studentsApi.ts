@@ -33,7 +33,7 @@ function toBoolean(value: unknown) {
 
 function toFormat(value: unknown) {
   const format = Number(value)
-  return Number.isInteger(format) && format >= 1 && format <= 11 ? format : undefined
+  return Number.isInteger(format) && format >= 1 && format <= 12 ? format : undefined
 }
 
 function normalizeStudent(row: unknown): Student {
@@ -117,7 +117,7 @@ export async function updateCome(id: string, come: boolean, format?: number) {
   const hasValidFormat = typeof format === 'number'
     && Number.isInteger(format)
     && format >= 1
-    && format <= 11
+    && format <= 12
 
   if (come && !hasValidFormat) {
     throw new Error('Select a valid frame format')
@@ -149,6 +149,36 @@ export async function updateCome(id: string, come: boolean, format?: number) {
   return payload.data
 }
 
+export async function updatePaid(id: string, paid: boolean) {
+  if (!API_URL) {
+    throw new Error('Missing VITE_STUDENTS_API_URL environment variable')
+  }
+
+  const response = await fetchWithTimeout(API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8',
+    },
+    body: JSON.stringify({
+      action: 'updatePaid',
+      id: String(id),
+      paid,
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Student payment API returned ${response.status}`)
+  }
+
+  const payload = await readApiResponse(response)
+
+  if (!payload.success) {
+    throw new Error(getErrorMessage(payload, 'Could not update student payment status'))
+  }
+
+  return payload.data
+}
+
 export async function createEmergencyStudent(input: EmergencyStudentInput): Promise<Student> {
   if (!API_URL) {
     throw new Error('Missing VITE_STUDENTS_API_URL environment variable')
@@ -161,7 +191,7 @@ export async function createEmergencyStudent(input: EmergencyStudentInput): Prom
   const hasValidFormat = typeof format === 'number'
     && Number.isInteger(format)
     && format >= 1
-    && format <= 11
+    && format <= 12
 
   if (!id) {
     throw new Error('Enter a student ID')

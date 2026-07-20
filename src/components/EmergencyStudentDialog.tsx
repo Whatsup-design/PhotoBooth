@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import type { EmergencyStudentInput } from '../data/studentsApi'
 
-const FRAME_OPTIONS = Array.from({ length: 11 }, (_, index) => index + 1)
+const FRAME_OPTIONS = Array.from({ length: 12 }, (_, index) => index + 1)
 
 type EmergencyStudentDialogProps = {
   isOpen: boolean

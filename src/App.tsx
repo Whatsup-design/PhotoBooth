@@ -7,11 +7,11 @@ import { StudentDetail } from './components/StudentDetail'
 import { StudentListSkeleton } from './components/StudentListSkeleton'
 import { StudentTable } from './components/StudentTable'
 import { MobileStatsStrip, SummaryCards } from './components/SummaryCards'
-import { createEmergencyStudent, fetchStudentsFromApi, type EmergencyStudentInput, updateCome } from './data/studentsApi'
+import { createEmergencyStudent, fetchStudentsFromApi, type EmergencyStudentInput, updateCome, updatePaid } from './data/studentsApi'
 import type { Student } from './types/student'
 import { filterStudents, type StudentStatusFilter } from './utils/filterStudents'
 
-const FRAME_OPTIONS = Array.from({ length: 11 }, (_, index) => index + 1)
+const FRAME_OPTIONS = Array.from({ length: 12 }, (_, index) => index + 1)
 
 function ReloadIcon({ spinning = false }: { spinning?: boolean }) {
   return (
@@ -141,6 +141,32 @@ function App() {
     } finally {
       setPendingStudentIds((currentIds) => currentIds.filter((id) => id !== student.id))
       setStudentToMarkNotCame(null)
+    }
+  }
+
+  const markStudentPaid = async (student: Student) => {
+    if (pendingStudentIds.includes(student.id) || student.paid) {
+      return
+    }
+
+    setStudentUpdateError('')
+    setPendingStudentIds((currentIds) => [...currentIds, student.id])
+
+    try {
+      await updatePaid(student.id, true)
+
+      setStudentRecords((currentStudents) => {
+        return currentStudents.map((currentStudent) =>
+          currentStudent.id === student.id ? { ...currentStudent, paid: true } : currentStudent,
+        )
+      })
+      setSelectedStudent((currentStudent) =>
+        currentStudent?.id === student.id ? { ...currentStudent, paid: true } : currentStudent,
+      )
+    } catch (error) {
+      setStudentUpdateError(error instanceof Error ? error.message : 'Could not update student payment status')
+    } finally {
+      setPendingStudentIds((currentIds) => currentIds.filter((id) => id !== student.id))
     }
   }
 
@@ -282,6 +308,7 @@ function App() {
         isUpdating={selectedStudent ? pendingStudentIds.includes(selectedStudent.id) : false}
         onClose={() => setSelectedStudent(null)}
         onMarkCome={requestMarkStudentCame}
+        onMarkPaid={markStudentPaid}
       />
 
       {studentToMarkCame ? (

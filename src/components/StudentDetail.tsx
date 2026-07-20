@@ -6,9 +6,10 @@ type StudentDetailProps = {
   isUpdating: boolean
   onClose: () => void
   onMarkCome: (student: Student) => void
+  onMarkPaid: (student: Student) => void
 }
 
-export function StudentDetail({ student, isUpdating, onClose, onMarkCome }: StudentDetailProps) {
+export function StudentDetail({ student, isUpdating, onClose, onMarkCome, onMarkPaid }: StudentDetailProps) {
   if (!student) {
     return null
   }
@@ -34,6 +35,16 @@ export function StudentDetail({ student, isUpdating, onClose, onMarkCome }: Stud
             <button className="shrink-0 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300" type="button" onClick={onClose}>Close</button>
           </div>
           <div className="mt-4 flex gap-2"><StatusBadge status="paid" active={student.paid} /><StatusBadge status="come" active={student.come} /></div>
+          {!student.paid ? (
+            <button
+              className="mt-4 h-12 w-full rounded-lg bg-emerald-600 px-4 text-base font-semibold text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:cursor-wait disabled:opacity-60"
+              type="button"
+              disabled={isUpdating}
+              onClick={() => onMarkPaid(student)}
+            >
+              {isUpdating ? 'Saving...' : 'Mark Paid'}
+            </button>
+          ) : null}
           {!student.come ? (
             <button
               className="mt-4 h-12 w-full rounded-lg bg-slate-950 px-4 text-base font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:cursor-wait disabled:opacity-60"

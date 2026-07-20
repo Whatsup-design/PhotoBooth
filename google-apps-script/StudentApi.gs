@@ -1,6 +1,6 @@
 const SHEET_NAME = 'Early Bird Student List'
 const FORMAT_MIN = 1
-const FORMAT_MAX = 11
+const FORMAT_MAX = 12
 
 const HEADERS = {
   ID: 'รหัส / ID',
